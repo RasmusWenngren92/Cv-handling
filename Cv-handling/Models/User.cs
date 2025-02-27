@@ -6,7 +6,7 @@ namespace Cv_handling.Models;
 public class User
 {
     [Key]
-    public required int UserId { get; set; }
+    public int UserId { get; set; }
 
     [StringLength(50, MinimumLength = 1)]
     public required string FirstName { get; set; }
@@ -18,9 +18,12 @@ public class User
     [StringLength(100)]
     public required string Email { get; set; }
     
+    [DataType(DataType.Date)]
     public required DateTime Birthday { get; set; }
     
-    public required int PhoneNumber { get; set; }
+    [StringLength(15)]
+    [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Phone number must be in valid international format.")]
+    public required string PhoneNumber { get; set; }
     
     [ForeignKey("Work")]
     public int WorkIdFk { get; set; } 

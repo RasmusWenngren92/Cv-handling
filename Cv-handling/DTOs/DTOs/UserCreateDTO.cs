@@ -1,12 +1,14 @@
-namespace Cv_handling.DTOs.UserDtos;
+namespace Cv_handling.DTOs.DTOs;
 
-public class UserCreateDTO
+public abstract class UserCreateDTO
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
     
     public string Email { get; set; }
-    
 
+    public string Phonenumber { get; set; }
+
+    public DateTime Birthday { get; set; }
    
 }

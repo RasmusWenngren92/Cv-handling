@@ -1,20 +1,22 @@
-using Cv_handling.DTOs.UserDtos;
+using Cv_handling.DTOs.DTOs;
 using Cv_handling.Models;
-using FluentValidation;
 
 namespace Cv_handling.Services;
+using FluentValidation;
 
 public class UserService
 {
-    public class UserCreateDTOValidator : AbstractValidator<UserCreateDTO>
+    private readonly IValidator<UserCreateDTO> _validator;
+
+    public UserService(IValidator<UserCreateDTO> validator)
     {
-        public UserCreateDTOValidator()
-        {
-            RuleFor(user => user.FirstName).NotEmpty().WithMessage("Please enter your first name");
-            RuleFor(user => user.LastName).NotEmpty().WithMessage("Please enter your last name");
-            RuleFor(user => user.Email).NotEmpty().WithMessage("Valid email is required");
-            
-            
-        }
+        this._validator = validator;
+    }
+    
+    public (bool isValid, string message) ValidateUser(UserCreateDTO newUser)
+    {
+        // Validate using the validator
+        var validationResult = _validator.Validate(newUser);
+        return !validationResult.IsValid ? (false, "Validation failed: " + string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))) : (true, string.Empty); // Validation passed
     }
 }
