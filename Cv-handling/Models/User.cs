@@ -18,6 +18,8 @@ public class User
     [StringLength(100)]
     public required string Email { get; set; }
     
+    [StringLength(100)]
+    public required string Adress { get; set; }
     [DataType(DataType.Date)]
     public required DateTime Birthday { get; set; }
     

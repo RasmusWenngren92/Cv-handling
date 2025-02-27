@@ -1,4 +1,5 @@
 using Cv_handling.Data;
+using Cv_handling.Endpoints;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling;
@@ -9,8 +10,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
             
-            // Add services to the container.
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             
@@ -31,7 +31,7 @@ public class Program
             }
             
             // app.UseHttpsRedirection();
-            
+            UserEndpoints.RegisterEndpoints(app);
             
             
             app.Run();

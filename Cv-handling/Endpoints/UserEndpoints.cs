@@ -8,8 +8,8 @@ namespace Cv_handling.Endpoints;
 
 public class UserEndpoints
 {
-    List<User> users = new List<User>();
-    public void RegisterEndpoints(WebApplication app)
+   
+    public static void RegisterEndpoints(WebApplication app)
     {
         app.MapGet("/users", async (CvDbContext context) =>
         {
@@ -17,9 +17,10 @@ public class UserEndpoints
             {
                 
             }).ToListAsync();
+            return userList;
         });
 
-        app.MapPost("/users", (UserCreateDTO newUser, UserService userService) =>
+        app.MapPost("/users", async (UserCreateDTO newUser, UserService userService, CvDbContext context ) =>
         {
             var (isValid, message) = userService.ValidateUser(newUser);
 
@@ -32,9 +33,12 @@ public class UserEndpoints
                 LastName = newUser.LastName,
                 Email = newUser.Email,
                 Birthday = newUser.Birthday,
-                PhoneNumber = newUser.Phonenumber
+                PhoneNumber = newUser.Phonenumber,
+                Adress = newUser.Adress
             };
-            users.Add(user);
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            
             return Results.Created($"/users/{user.UserId}", new UserDTO
             {
                 UserName = user.FirstName,
