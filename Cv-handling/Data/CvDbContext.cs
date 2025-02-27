@@ -7,8 +7,8 @@ public class CvDbContext(DbContextOptions<CvDbContext> options) : DbContext(opti
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Experience> Experiences { get; set; }
-    public DbSet<WorkExperience> WorkExperiences { get; set; }
-    public DbSet<EdjucationalExperience> EdjucationalExperience { get; set; }
+    public DbSet<Work> Work { get; set; }
+    public DbSet<Education> Education { get; set; }
     
     
 }
