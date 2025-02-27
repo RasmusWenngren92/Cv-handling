@@ -19,4 +19,7 @@ public class Work
     [DataType(DataType.Date)]
     public DateOnly AtCompany { get; set; }
     
+    public virtual List<User> Users { get; set; }
+    public virtual List<Experience> Experiences { get; set; }
+    
 }
