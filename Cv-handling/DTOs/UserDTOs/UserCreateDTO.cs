@@ -1,4 +1,4 @@
-namespace Cv_handling.DTOs.DTOs;
+namespace Cv_handling.DTOs.UserDTOs;
 
 public abstract class UserCreateDTO
 {

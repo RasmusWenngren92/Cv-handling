@@ -1,4 +1,5 @@
 using Cv_handling.DTOs.DTOs;
+using Cv_handling.DTOs.UserDTOs;
 using Cv_handling.Models;
 
 namespace Cv_handling.Services;

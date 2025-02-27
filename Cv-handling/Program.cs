@@ -32,6 +32,9 @@ public class Program
             
             // app.UseHttpsRedirection();
             UserEndpoints.RegisterEndpoints(app);
+            EducationEndpoints.RegisterEndpoints(app);
+            WorkEndpoints.RegisterEndpoints(app);
+            ExperienceEndpoints.RegisterEndpoints(app);
             
             
             app.Run();

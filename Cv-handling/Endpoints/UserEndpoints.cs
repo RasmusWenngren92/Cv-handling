@@ -1,5 +1,6 @@
 using Cv_handling.Data;
 using Cv_handling.DTOs.DTOs;
+using Cv_handling.DTOs.UserDTOs;
 using Cv_handling.Models;
 using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
