@@ -1,6 +1,6 @@
 namespace Cv_handling.DTOs.EducationDTOs;
 
-public class EdcationCreateDTO
+public class EducationCreateDTO
 {
     
 }

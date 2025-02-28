@@ -34,4 +34,6 @@ public class User
     [ForeignKey("Education")]
     public int EducationIdFk { get; set; }
     public virtual Education Education { get; set; }
+    public virtual List<Experience> Experiences { get; set; } = new();
+
 }

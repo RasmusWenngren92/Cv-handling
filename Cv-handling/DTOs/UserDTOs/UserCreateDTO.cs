@@ -1,3 +1,5 @@
+using Cv_handling.DTOs.ExperienceDTOs;
+
 namespace Cv_handling.DTOs.UserDTOs;
 
 public abstract class UserCreateDTO
@@ -11,5 +13,7 @@ public abstract class UserCreateDTO
     public string Adress { get; set; }
 
     public DateTime Birthday { get; set; }
-   
+    
+    public List<ExperienceCreateDTO> Experiences { get; set; } = new();
+
 }

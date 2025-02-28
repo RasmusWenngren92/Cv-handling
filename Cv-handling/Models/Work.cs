@@ -11,13 +11,13 @@ public class Work
     public required string CompanyName { get; set; }
 
     [StringLength(50, MinimumLength = 1)]
-    public required string CompanyTitle { get; set; }
+    public required string WorkTitle { get; set; }
 
     [StringLength(50, MinimumLength = 1)]
-    public required string JobDescription { get; set; }
+    public required string Description { get; set; }
 
     [DataType(DataType.Date)]
-    public DateOnly AtCompany { get; set; }
+    public DateOnly Duration { get; set; }
     
     public virtual List<User> Users { get; set; }
     public virtual List<Experience> Experiences { get; set; }

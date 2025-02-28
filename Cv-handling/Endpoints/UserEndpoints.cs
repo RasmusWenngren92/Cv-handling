@@ -1,6 +1,8 @@
 using Cv_handling.Data;
 using Cv_handling.DTOs.DTOs;
+using Cv_handling.DTOs.ExperienceDTOs;
 using Cv_handling.DTOs.UserDTOs;
+using Cv_handling.DTOs.WorkDTOs;
 using Cv_handling.Models;
 using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +16,35 @@ public class UserEndpoints
     {
         app.MapGet("/users", async (CvDbContext context) =>
         {
-            var userList = await context.Users.Select(u => new UserDTO
+
+            var userList = await context.Users.Include(u=>u.Experiences).Select(u => new UserDTO
             {
-                
+                UserId = u.UserId,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Experiences = u.Experiences.Select(e => new ExperienceDTO
+                {
+                    ExperienceId = e.ExperienceId,
+                    Work = new WorkDTO
+                    {
+                        WorkId = e.Work.WorkId,
+                        CompanyName = e.Work.CompanyName,
+                        WorkTitle = e.Work.WorkTitle,
+                        Description = e.Work.Description,
+                        Duration = e.Work.Duration,
+                    },
+                    Education = new EducationDTO
+                    {
+                        EducationId = e.Education.EducationId,
+                        SchoolName = e.Education.SchoolName,
+                        StartDate = e.Education.StartDate,
+                        GraduationDate = e.Education.GraduationDate
+                        
+                    }
+                }).ToList()
             }).ToListAsync();
-            return userList;
+            
+            return Results.Ok(userList);
         });
 
         app.MapPost("/users", async (UserCreateDTO newUser, UserService userService, CvDbContext context ) =>
@@ -42,7 +68,8 @@ public class UserEndpoints
             
             return Results.Created($"/users/{user.UserId}", new UserDTO
             {
-                UserName = user.FirstName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 UserEmail = user.Email,
             });
         });
