@@ -18,22 +18,15 @@ public class User
     [StringLength(100)]
     public required string Email { get; set; }
     
-    [StringLength(100)]
-    public required string Adress { get; set; }
     [DataType(DataType.Date)]
-    public required DateTime Birthday { get; set; }
+    public required DateTime? Birthday { get; set; }
     
     [StringLength(15)]
     [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Phone number must be in valid international format.")]
     public required string PhoneNumber { get; set; }
-    
-    [ForeignKey("Work")]
-    public int WorkIdFk { get; set; } 
-    public virtual Work Work { get; set; }
-    
-    [ForeignKey("Education")]
-    public int EducationIdFk { get; set; }
-    public virtual Education Education { get; set; }
-    public virtual List<Experience> Experiences { get; set; } = new();
 
+    public List<Education> Educations { get; set; } = [];
+    public List<Work> Works { get; set; } = [];
+    public virtual List<Experience> Experiences { get; set; } = []; 
+    
 }

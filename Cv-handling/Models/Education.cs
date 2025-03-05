@@ -20,7 +20,8 @@ public class Education
     public required DateOnly GraduationDate { get; set; }
     
     public bool IsAlumni { get; set; } = false;
-
-    public virtual List<User> Users { get; set; }
+    public int UserIdFk { get; set; }
+    public virtual User User { get; set; }
+    
     public virtual List<Experience> Experiences { get; set; }
 }

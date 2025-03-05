@@ -13,7 +13,7 @@ public class Work
     [StringLength(50, MinimumLength = 1)]
     public required string WorkTitle { get; set; }
 
-    [StringLength(50, MinimumLength = 1)]
+    [MaxLength(500)]
     public required string Description { get; set; }
 
     [DataType(DataType.Date)]
@@ -21,5 +21,7 @@ public class Work
     
     public virtual List<User> Users { get; set; }
     public virtual List<Experience> Experiences { get; set; }
+    public int UserIdFk { get; set; }
+    public virtual User User { get; set; }
     
 }

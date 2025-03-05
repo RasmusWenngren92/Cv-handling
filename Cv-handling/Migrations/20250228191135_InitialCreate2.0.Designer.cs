@@ -4,6 +4,7 @@ using Cv_handling.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cv_handling.Migrations
 {
     [DbContext(typeof(CvDbContext))]
-    partial class CvDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250228191135_InitialCreate2.0")]
+    partial class InitialCreate20
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,34 +52,9 @@ namespace Cv_handling.Migrations
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("EducationId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Education");
-
-                    b.HasData(
-                        new
-                        {
-                            EducationId = 1,
-                            GraduationDate = new DateOnly(2014, 6, 1),
-                            IsAlumni = true,
-                            SchoolName = "University of Awesome",
-                            SchoolTitle = "Bachelor's Degree",
-                            StartDate = new DateOnly(2010, 9, 1)
-                        },
-                        new
-                        {
-                            EducationId = 2,
-                            GraduationDate = new DateOnly(2017, 6, 1),
-                            IsAlumni = true,
-                            SchoolName = "Institute of Greatness",
-                            SchoolTitle = "Master's Degree",
-                            StartDate = new DateOnly(2015, 9, 1)
-                        });
                 });
 
             modelBuilder.Entity("Cv_handling.Models.Experience", b =>
@@ -115,8 +93,16 @@ namespace Cv_handling.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
-                    b.Property<DateTime?>("Birthday")
+                    b.Property<string>("Adress")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("Birthday")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("EducationIdFk")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -138,29 +124,16 @@ namespace Cv_handling.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
+                    b.Property<int>("WorkIdFk")
+                        .HasColumnType("int");
+
                     b.HasKey("UserId");
 
-                    b.ToTable("Users");
+                    b.HasIndex("EducationIdFk");
 
-                    b.HasData(
-                        new
-                        {
-                            UserId = 1,
-                            Birthday = new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "johndoe@example.com",
-                            FirstName = "John",
-                            LastName = "Doe",
-                            PhoneNumber = "+1234567890"
-                        },
-                        new
-                        {
-                            UserId = 2,
-                            Birthday = new DateTime(1985, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "janesmith@example.com",
-                            FirstName = "Jane",
-                            LastName = "Smith",
-                            PhoneNumber = "+1987654321"
-                        });
+                    b.HasIndex("WorkIdFk");
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Cv_handling.Models.Work", b =>
@@ -178,8 +151,8 @@ namespace Cv_handling.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateOnly>("Duration")
                         .HasColumnType("date");
@@ -192,46 +165,6 @@ namespace Cv_handling.Migrations
                     b.HasKey("WorkId");
 
                     b.ToTable("Work");
-
-                    b.HasData(
-                        new
-                        {
-                            WorkId = 1,
-                            CompanyName = "Tech Corp",
-                            Description = "Worked as a software engineer on various web projects.",
-                            Duration = new DateOnly(2015, 5, 1),
-                            WorkTitle = "Software Engineer"
-                        },
-                        new
-                        {
-                            WorkId = 2,
-                            CompanyName = "Creative Solutions",
-                            Description = "Managed multiple projects and led teams to success.",
-                            Duration = new DateOnly(2017, 8, 15),
-                            WorkTitle = "Project Manager"
-                        });
-                });
-
-            modelBuilder.Entity("UserWork", b =>
-                {
-                    b.Property<int>("UsersUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WorksWorkId")
-                        .HasColumnType("int");
-
-                    b.HasKey("UsersUserId", "WorksWorkId");
-
-                    b.HasIndex("WorksWorkId");
-
-                    b.ToTable("UserWork");
-                });
-
-            modelBuilder.Entity("Cv_handling.Models.Education", b =>
-                {
-                    b.HasOne("Cv_handling.Models.User", null)
-                        .WithMany("Educations")
-                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Cv_handling.Models.Experience", b =>
@@ -257,36 +190,42 @@ namespace Cv_handling.Migrations
                     b.Navigation("Work");
                 });
 
-            modelBuilder.Entity("UserWork", b =>
+            modelBuilder.Entity("Cv_handling.Models.User", b =>
                 {
-                    b.HasOne("Cv_handling.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersUserId")
+                    b.HasOne("Cv_handling.Models.Education", "Education")
+                        .WithMany("Users")
+                        .HasForeignKey("EducationIdFk")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Cv_handling.Models.Work", null)
-                        .WithMany()
-                        .HasForeignKey("WorksWorkId")
+                    b.HasOne("Cv_handling.Models.Work", "Work")
+                        .WithMany("Users")
+                        .HasForeignKey("WorkIdFk")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Education");
+
+                    b.Navigation("Work");
                 });
 
             modelBuilder.Entity("Cv_handling.Models.Education", b =>
                 {
                     b.Navigation("Experiences");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Cv_handling.Models.User", b =>
                 {
-                    b.Navigation("Educations");
-
                     b.Navigation("Experiences");
                 });
 
             modelBuilder.Entity("Cv_handling.Models.Work", b =>
                 {
                     b.Navigation("Experiences");
+
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }
