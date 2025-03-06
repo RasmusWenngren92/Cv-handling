@@ -16,7 +16,7 @@ public class ExperienceDTO
    
     public ExperienceType Type { get; set; }
     
-    public EducationDTO? Education { get; set; }
+    public EducationDTO Education { get; set; }
     public WorkDTO? Work { get; set; }
 }
 public class ExperienceCreateDTO

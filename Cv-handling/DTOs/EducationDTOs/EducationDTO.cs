@@ -33,10 +33,7 @@ public class EducationUpdateDTO
     
     public int? ExperienceId { get; set; }
 
-    public bool ValidateDates()
-    {
-        return GraduationDate >= StartDate;
-    }
+   
     
 }
 public class EducationCreateDTO 
@@ -51,9 +48,6 @@ public class EducationCreateDTO
     public DateOnly StartDate { get; set; }
     [Required]
     public DateOnly GraduationDate { get; set; }
-    public bool ValidateDates()
-    {
-        return GraduationDate >= StartDate;
-    }
+   
     
 }

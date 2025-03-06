@@ -34,9 +34,14 @@ public class EducationEndpoints
             
                 return educationList.Count == 0 ? Results.NotFound("No Education found") : Results.Ok(educationList);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-              return Results.StatusCode(500);
+                Console.WriteLine($"An error occured: {ex.Message}");
+                return Results.Problem(
+                    title: "An error occured",
+                    detail: "Something went wrong while fetching education data.",
+                    statusCode: 500,
+                    instance: "/education");
             }
            
         });
