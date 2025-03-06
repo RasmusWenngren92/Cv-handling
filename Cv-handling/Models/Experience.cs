@@ -8,9 +8,12 @@ public class Experience
 {
     [Key]
     public int ExperienceId { get; set; }
+    
+    
     [ForeignKey("User")]
     
     public int UserIdFk { get; set; }
+    
     public virtual User User { get; set; }
     
     public ExperienceType Type { get; set; }

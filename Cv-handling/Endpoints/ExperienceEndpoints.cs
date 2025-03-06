@@ -27,7 +27,7 @@ public class ExperienceEndpoints
                             ExperienceId = e.ExperienceId,
                             UserId = e.UserIdFk,
                             Type = e.Type,
-                            Work = e.Type == ExperienceType.Work && e.Work != null
+                            Work = e.Type == ExperienceType.Work
                                 ? new WorkDTO
                                 {
                                     WorkId = e.Work.WorkId,
@@ -37,7 +37,7 @@ public class ExperienceEndpoints
                                     Duration = e.Work.Duration
                                 }
                                 : null,
-                            Education = e.Type == ExperienceType.Education && e.Education != null
+                            Education = e.Type == ExperienceType.Education
                                 ? new EducationDTO
                                 {
                                     EducationId = e.Education.EducationId,

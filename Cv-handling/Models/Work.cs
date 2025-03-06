@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cv_handling.Models;
 
@@ -21,6 +22,7 @@ public class Work
     
     public virtual List<User> Users { get; set; }
     public virtual List<Experience> Experiences { get; set; }
+    [ForeignKey("User")]
     public int UserIdFk { get; set; }
     public virtual User User { get; set; }
     

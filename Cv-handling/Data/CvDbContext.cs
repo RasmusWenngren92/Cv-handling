@@ -12,16 +12,10 @@ public class CvDbContext(DbContextOptions<CvDbContext> options) : DbContext(opti
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<Education>()
-            .HasOne(e => e.User)
-            .WithMany(u => u.Educations)
-            .HasForeignKey(e => e.UserIdFk);
-        
-        modelBuilder.Entity<Work>()
-            .HasOne(w => w.User)
-            .WithMany(u => u.Works)
-            .HasForeignKey(w => w.UserIdFk);
-       
+        modelBuilder.Entity<User>()
+            .HasMany(u => u.Works)      
+            .WithOne(w => w.User)      
+            .HasForeignKey(w => w.UserIdFk) 
+            .OnDelete(DeleteBehavior.Cascade); 
     }
 }
