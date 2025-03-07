@@ -38,7 +38,7 @@ public static class WorkEndpoints
             {
                 var work = await ctx.Works
                     .Where(w => w.WorkId == id)
-                    .Select(w => new WorkDtos.WorkDto()
+                    .Select(w => new WorkDto()
                     {
                         Title = w.Title,
                         Company = w.Company,
@@ -63,7 +63,7 @@ public static class WorkEndpoints
                 );
             }
         });
-        group.MapPost("/", async (CvDbContext ctx, WorkDtos.CreateWorkDto newWork) =>
+        group.MapPost("/", async (CvDbContext ctx, CreateWorkDto newWork) =>
         {
             try
             {
@@ -101,7 +101,7 @@ public static class WorkEndpoints
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, WorkDtos.UpdateWorkDto work) =>
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateWorkDto work) =>
         {
             try
             {

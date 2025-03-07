@@ -15,9 +15,9 @@ public class UserService
             context = _context;
         }
 
-        public async Task<List<UserDtos.UserDto>> GetUsers()
+        public async Task<List<UserDto>> GetUsers()
         {
-            var users = await context.Users.Select(u => new UserDtos.UserDto
+            var users = await context.Users.Select(u => new UserDto
             {
                 FirstName = u.FirstName,
                 LastName = u.LastName,
@@ -26,9 +26,9 @@ public class UserService
             }).ToListAsync();
             return users;
         }
-        public async Task<List<EducationDtos.EducationDto>> GetEducations()
+        public async Task<List<EducationDto>> GetEducations()
         {
-            var educations = await context.Educations.Select(e => new EducationDtos.EducationDto
+            var educations = await context.Educations.Select(e => new EducationDto
             {
                 SchoolName = e.SchoolName,
                 Degree = e.Degree,
@@ -38,9 +38,9 @@ public class UserService
             }).ToListAsync();
             return educations;
         }        
-        public async Task<List<WorkDtos.WorkDto>> GetWorks()
+        public async Task<List<WorkDto>> GetWorks()
         {
-            var works = await context.Works.Select(w => new WorkDtos.WorkDto
+            var works = await context.Works.Select(w => new WorkDto
             {
              Title = w.Title,
              Description = w.Description,

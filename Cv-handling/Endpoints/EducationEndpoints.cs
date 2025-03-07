@@ -37,7 +37,7 @@ public static class EducationEndpoints
             {
                 var education = await ctx.Educations
                     .Where(e => e.EducationId == id)
-                    .Select(e => new EducationDtos.EducationDto
+                    .Select(e => new EducationDto
                     {
                         SchoolName = e.SchoolName,
                         Degree = e.Degree,
@@ -61,7 +61,7 @@ public static class EducationEndpoints
                 );
             }
         });
-        group.MapPost("/", async (CvDbContext ctx, EducationDtos.CreateEducationDto newEducation) =>
+        group.MapPost("/", async (CvDbContext ctx, CreateEducationDto newEducation) =>
         {
             try
             {
@@ -98,7 +98,7 @@ public static class EducationEndpoints
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, EducationDtos.UpdateEducationDto education) =>
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateEducationDto education) =>
         {
             try
             {

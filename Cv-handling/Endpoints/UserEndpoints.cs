@@ -37,7 +37,7 @@ public static class UserEndpoints
             {
                 var user = await ctx.Users
                     .Where(e => e.UserId == id)
-                    .Select(u => new UserDtos.UserDto
+                    .Select(u => new UserDto
                     {
                         FirstName = u.FirstName,
                         LastName = u.LastName,
@@ -60,7 +60,7 @@ public static class UserEndpoints
             }
         });
 
-        group.MapPost("/", async (CvDbContext ctx, UserDtos.CreateUserDto newUser) =>
+        group.MapPost("/", async (CvDbContext ctx, CreateUserDto newUser) =>
         {
             try
             {
@@ -82,7 +82,15 @@ public static class UserEndpoints
 
                 ctx.Users.Add(user);
                 await ctx.SaveChangesAsync();
-                return Results.Created($"/user/{user.UserId}", user);
+
+                var createUser = new CreateUserDto
+                {
+                    FirstName = newUser.FirstName,
+                    LastName = newUser.LastName,
+                    EmailAddress = newUser.EmailAddress,
+                    PhoneNumber = newUser.PhoneNumber
+                };
+                return Results.Created($"/api/user/{user.UserId}", createUser);
             }
             catch (Exception e)
             {
@@ -90,14 +98,14 @@ public static class UserEndpoints
 
                 return Results.Problem(
                     title: "An unexpected error occurred.",
-                    detail: "Something went wrong while fetching data.",
+                    detail: e.Message,
                     statusCode: StatusCodes.Status500InternalServerError,
                     instance: "/user"
                 );
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UserDtos.UpdateUserDto user) =>
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateUserDto user) =>
         {
             try
             {
@@ -112,7 +120,14 @@ public static class UserEndpoints
 
                 await ctx.SaveChangesAsync();
 
-                return Results.Ok(user);
+                var updateUser = new UpdateUserDto
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    EmailAddress = user.EmailAddress,
+                    PhoneNumber = user.PhoneNumber
+                };
+                return Results.Ok(updateUser);
             }
             catch (Exception e)
             {
@@ -125,6 +140,42 @@ public static class UserEndpoints
                     instance: "/user"
                 );
             }
+        });
+
+        group.MapGet("/{id:int}/detail", async (CvDbContext ctx, int id) =>
+        {
+            var user = await ctx.Users
+                .Where(u => u.UserId == id)
+                .Include(u => u.Educations)
+                .Include(u => u.Works)
+                .FirstOrDefaultAsync();
+            
+            if(user is null)
+                return Results.NotFound($"User with id {id} not found");
+
+            var userDetails = new UserDetailResponseDto
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                EmailAddress = user.EmailAddress,
+                PhoneNumber = user.PhoneNumber,
+                Educations = user.Educations.Select(e => new EducationsResponseDto
+                {
+                    SchoolName = e.SchoolName,
+                    Degree = e.Degree,
+                    StartYear = e.StartYear,
+                    GraduationYear = e.GraduationYear,
+                }).ToList(),
+                Works = user.Works.Select(e => new WorkResponseDto
+                {
+                    Title = e.Title,
+                    Company = e.Company,
+                    Description = e.Description,
+                    StartYear = e.StartYear,
+                    EndYear = e.EndYear
+                }).ToList(),
+            };
+            return Results.Ok(userDetails);
         });
 
         group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>

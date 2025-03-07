@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Cv_handling.DTOs;
 
 namespace Cv_handling.Models;
 
@@ -26,7 +27,7 @@ public class User
     
     public List<Education> Educations { get; set; }
     public List<Work> Works { get; set; }
-
+    
     
     
 }
