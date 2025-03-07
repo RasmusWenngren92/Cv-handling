@@ -1,128 +1,168 @@
+using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
-using Cv_handling.DTOs.EducationDTOs;
-using Cv_handling.DTOs.ExperienceDTOs;
-using Cv_handling.DTOs.WorkDTOs;
+using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.Services;
+using Cv_handling.UserServices;
 using Microsoft.EntityFrameworkCore;
-using EducationDTO = Cv_handling.DTOs.EducationDTOs.EducationDTO;
 
 namespace Cv_handling.Endpoints;
 
-public class EducationEndpoints
+public static class EducationEndpoints
 {
-    public static void RegisterEndpoints(WebApplication app)
+    public static RouteGroupBuilder MapEducationEndpoints(this RouteGroupBuilder group)
     {
-        app.MapGet("/education", async (CvDbContext context, int page = 1, int pageSize = 10) =>
+        group.MapGet("/GetEducations", async (UserService userService) =>
         {
             try
             {
-                var educationList = await context.Education
-                    .Skip((page -1) * pageSize)
-                    .Take(pageSize)
-                    .Select(e => new EducationDTO
-                {
-                
-                    EducationId = e.EducationId,
-                    SchoolName = e.SchoolName,
-                    StartDate = e.StartDate,
-                    SchoolTitle = e.SchoolTitle,
-                    GraduationDate = e.GraduationDate
-                        
-             
-                }).ToListAsync();
-            
-                return educationList.Count == 0 ? Results.NotFound("No Education found") : Results.Ok(educationList);
+                var educations = await userService.GetEducations();
+                return Results.Ok(educations);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"An error occured: {ex.Message}");
+                Console.WriteLine($"An error occurred: {e}");
+
                 return Results.Problem(
-                    title: "An error occured",
-                    detail: "Something went wrong while fetching education data.",
-                    statusCode: 500,
-                    instance: "/education");
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/educations"
+                );
             }
-           
         });
 
-        app.MapPost("/education",
-            async (EducationCreateDTO newEducation, UserService userService, CvDbContext context) =>
-            {
-                try
-                {
-                    var(isValid, message) = userService.ValidateEducation(newEducation);
-                
-                    if(!isValid)
-                        return Results.BadRequest( new { Message = message } );
-
-                    var education = new Education
-                    {
-                        SchoolName = newEducation.SchoolName,
-                        SchoolTitle = newEducation.SchoolTitle,
-                        StartDate = newEducation.StartDate,
-                        GraduationDate = newEducation.GraduationDate,
-                        IsAlumni = newEducation.IsAlumni,
-                    };
-                    context.Education.Add(education);
-                    await context.SaveChangesAsync();
-                
-                    return Results.Created($"/education/{education.EducationId}", new EducationDTO
-                    {
-                        SchoolName = education.SchoolName,
-                        StartDate = education.StartDate,
-                        GraduationDate = education.GraduationDate,
-                    });
-                }
-                catch (Exception )
-                {
-                    return Results.StatusCode(500);
-                }
-               
-            });
-
-        app.MapPut("/education/{id:int}", async (CvDbContext context, int id, Education education) =>
+        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
-                var existingEducation = await context.Education.FirstOrDefaultAsync(e => e.EducationId == id);
-            
-                if(existingEducation == null) return Results.NotFound($"Education with id {id} not found");
-            
-                existingEducation.SchoolName = education.SchoolName;
-                existingEducation.SchoolTitle = education.SchoolTitle;
-                existingEducation.StartDate = education.StartDate;
-                existingEducation.GraduationDate = education.GraduationDate;
-                existingEducation.IsAlumni = education.IsAlumni;
-            
-                context.Education.Update(existingEducation);
-                await context.SaveChangesAsync();
-                return Results.NoContent(); 
-            }
-            catch (Exception )
-            {
-                return Results.StatusCode(500);
-            }
-           
-        });
+                var education = await ctx.Educations
+                    .Where(e => e.EducationId == id)
+                    .Select(e => new EducationDtos.EducationDto
+                    {
+                        SchoolName = e.SchoolName,
+                        Degree = e.Degree,
+                        StartYear = e.StartYear,
+                        GraduationYear = e.GraduationYear
+                    }).FirstOrDefaultAsync();
 
-        app.MapDelete("/education/{id:int}", async (CvDbContext context, int id) =>
+                return education is not null
+                    ? Results.Ok(education)
+                    : Results.NotFound($"Education with id {id} not found");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/education"
+                );
+            }
+        });
+        group.MapPost("/", async (CvDbContext ctx, EducationDtos.CreateEducationDto newEducation) =>
         {
             try
             {
-                var existingEducation = await context.Education.FirstOrDefaultAsync(e => e.EducationId == id);
-                if(existingEducation == null) return Results.NotFound($"Education with id {id} not found");
-                context.Education.Remove(existingEducation);
-                await context.SaveChangesAsync();
-                return Results.NoContent(); 
-            }
-            catch (Exception )
-            {
-                return Results.StatusCode(500);
-            }
-   
+                var validationContext = new ValidationContext(newEducation);
+                var validationResult = new List<ValidationResult>();
 
+                var isValid = Validator.TryValidateObject(newEducation, validationContext, validationResult, true);
+
+                if (!isValid)
+                    return Results.BadRequest(validationResult.Select(e => e.ErrorMessage));
+
+                var education = new Education
+                {
+                    SchoolName = newEducation.SchoolName,
+                    Degree = newEducation.Degree,
+                    StartYear = newEducation.StartYear,
+                    GraduationYear = newEducation.GraduationYear
+                };
+
+                ctx.Educations.Add(education);
+                await ctx.SaveChangesAsync();
+                return Results.Created($"/education/{education.EducationId}", education);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/education"
+                );
+            }
         });
 
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, EducationDtos.UpdateEducationDto education) =>
+        {
+            try
+            {
+                var existingEducation = await ctx.Educations.FirstOrDefaultAsync(u => u.EducationId == id);
+
+
+                if (existingEducation == null)
+                    return Results.NotFound(Results.NotFound($"Education with id {id} not found"));
+                if (!string.IsNullOrWhiteSpace(education.School))
+                    existingEducation.SchoolName = education.School;
+
+                if (!string.IsNullOrWhiteSpace(education.Degree))
+                    existingEducation.Degree = education.Degree;
+
+                if (education.StartYear > 1960)
+                    existingEducation.StartYear = education.StartYear;
+
+                if (education.GraduationYear.HasValue)
+                    existingEducation.GraduationYear = education.GraduationYear.Value;
+
+                await ctx.SaveChangesAsync();
+
+                return Results.Ok(existingEducation);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/education"
+                );
+            }
+        });
+
+        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
+        {
+            try
+            {
+                var education = await ctx.Educations.FirstOrDefaultAsync(u => u.EducationId == id);
+
+                if (education == null)
+                    return Results.NotFound($"Education with id {id} not found");
+
+                ctx.Educations.Remove(education);
+                await ctx.SaveChangesAsync();
+
+                return Results.Ok();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/education"
+                );
+            }
+        });
+
+        return group;
     }
 }

@@ -1,130 +1,159 @@
+using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
-using Cv_handling.DTOs.EducationDTOs;
-using Cv_handling.DTOs.ExperienceDTOs;
-using Cv_handling.DTOs.UserDTOs;
-using Cv_handling.DTOs.WorkDTOs;
+using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.Services;
+using Cv_handling.UserServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Endpoints;
 
-public class UserEndpoints
+public static class UserEndpoints
 {
-    public static void RegisterEndpoints(WebApplication app)
+    public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder group)
     {
-        app.MapGet("/users", async (CvDbContext context, int page = 1, int pageSize = 10) =>
+        group.MapGet("GetUsers", async (UserService userServices) =>
         {
             try
             {
-                var userList = await context.Users.Include(u => u.Experiences)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(u => new UserDTO
-                    {
-                        UserId = u.UserId,
-                        FirstName = u.FirstName,
-                        LastName = u.LastName,
-                        Experiences = u.Experiences.Select(e => new ExperienceDTO
-                        {
-                            ExperienceId = e.ExperienceId,
-                            Work = new WorkDTO
-                            {
-                                WorkId = e.Work.WorkId,
-                                CompanyName = e.Work.CompanyName,
-                                WorkTitle = e.Work.WorkTitle,
-                                Description = e.Work.Description,
-                                Duration = e.Work.Duration
-                            },
-                            Education = new EducationDTO
-                            {
-                                EducationId = e.Education.EducationId,
-                                SchoolName = e.Education.SchoolName,
-                                StartDate = e.Education.StartDate,
-                                GraduationDate = e.Education.GraduationDate
-                            }
-                        }).ToList()
-                    }).ToListAsync();
-                return userList.Count == 0 ? Results.NotFound("No users found") : Results.Ok(userList);
+                var users = await userServices.GetUsers();
+                return Results.Ok(users);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return Results.StatusCode(500);
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/user"
+                );
             }
         });
 
-        app.MapPost("/users", async (UserCreateDTO newUser, UserService userService, CvDbContext context) =>
+        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
-                var (isValid, message) = userService.ValidateUser(newUser);
+                var user = await ctx.Users
+                    .Where(e => e.UserId == id)
+                    .Select(u => new UserDtos.UserDto
+                    {
+                        FirstName = u.FirstName,
+                        LastName = u.LastName,
+                        EmailAddress = u.EmailAddress,
+                        PhoneNumber = u.PhoneNumber
+                    }).FirstOrDefaultAsync();
+
+                return user is not null ? Results.Ok(user) : Results.NotFound($"User with id {id} not found");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/user"
+                );
+            }
+        });
+
+        group.MapPost("/", async (CvDbContext ctx, UserDtos.CreateUserDto newUser) =>
+        {
+            try
+            {
+                var validationContext = new ValidationContext(newUser);
+                var validationResult = new List<ValidationResult>();
+
+                var isValid = Validator.TryValidateObject(newUser, validationContext, validationResult, true);
 
                 if (!isValid)
-                    return Results.BadRequest(new { Message = message });
+                    return Results.BadRequest(validationResult.Select(e => e.ErrorMessage));
 
                 var user = new User
                 {
                     FirstName = newUser.FirstName,
                     LastName = newUser.LastName,
-                    Email = newUser.Email,
-                    Birthday = newUser.Birthday,
+                    EmailAddress = newUser.EmailAddress,
                     PhoneNumber = newUser.PhoneNumber
                 };
-                context.Users.Add(user);
-                await context.SaveChangesAsync();
 
-                return Results.Created($"/users/{user.UserId}", new UserDTO
-                {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email
-                });
+                ctx.Users.Add(user);
+                await ctx.SaveChangesAsync();
+                return Results.Created($"/user/{user.UserId}", user);
             }
-            catch (Exception )
+            catch (Exception e)
             {
-                return Results.StatusCode(500);
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/user"
+                );
             }
         });
 
-        app.MapPut("/users/{id:int}", async (CvDbContext context, int id, User user) =>
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UserDtos.UpdateUserDto user) =>
         {
             try
             {
-                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+                var existingUser = await ctx.Users.FirstOrDefaultAsync(u => u.UserId == id);
 
-                if (existingUser == null) return Results.NotFound($"User with ID {id} not found");
 
+                if (existingUser == null) return Results.NotFound(Results.NotFound($"User with id {id} not found"));
                 existingUser.FirstName = user.FirstName;
                 existingUser.LastName = user.LastName;
-                existingUser.Email = user.Email;
-                existingUser.Birthday = user.Birthday;
+                existingUser.EmailAddress = user.EmailAddress;
                 existingUser.PhoneNumber = user.PhoneNumber;
 
-                context.Users.Update(existingUser);
+                await ctx.SaveChangesAsync();
 
-                await context.SaveChangesAsync();
-                return Results.NoContent();
+                return Results.Ok(user);
             }
-            catch (Exception )
+            catch (Exception e)
             {
-                return Results.StatusCode(500);
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/user"
+                );
             }
         });
 
-        app.MapDelete("/users/{id:int}", async (CvDbContext context, int id) =>
+        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
-                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.UserId == id);
-                if (existingUser == null) return Results.NotFound($"User with ID {id} not found");
-                context.Users.Remove(existingUser);
-                await context.SaveChangesAsync();
-                return Results.NoContent();
+                var user = await ctx.Users.FirstOrDefaultAsync(u => u.UserId == id);
+
+                if (user == null)
+                    return Results.NotFound($"User with id {id} not found");
+
+                ctx.Users.Remove(user);
+                await ctx.SaveChangesAsync();
+
+                return Results.Ok();
             }
-            catch (Exception )
+            catch (Exception e)
             {
-                return Results.StatusCode(500);
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/user"
+                );
             }
         });
+
+        return group;
     }
 }

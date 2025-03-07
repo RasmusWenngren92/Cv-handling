@@ -1,75 +1,55 @@
-using System.Data;
 using Cv_handling.Data;
-using Cv_handling.DTOs.EducationDTOs;
-using Cv_handling.DTOs.UserDTOs;
-using Cv_handling.DTOs.WorkDTOs;
+using Cv_handling.DTOs;
 using Cv_handling.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace Cv_handling.Services;
-using FluentValidation;
+namespace Cv_handling.UserServices;
 
 public class UserService
 {
-    private readonly CvDbContext _context;
-    private readonly IValidator<UserCreateDTO> _validator;
-    private readonly IValidator<EducationCreateDTO> _educationValidator;
-    private readonly IValidator<WorkCreateDTO> _workValidator;
+    
+        private readonly CvDbContext context;
 
-
-    public (bool isValid, string message) ValidateUser(UserCreateDTO newUser)
-    {
-        var validationResult = _validator.Validate(newUser);
-        return !validationResult.IsValid
-            ? (false, "Validation failed: " + string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)))
-            : (true, string.Empty);
-    }
-
-    public class UserCreateDTOValidator : AbstractValidator<UserCreateDTO>
-    {
-        public UserCreateDTOValidator()
+        public UserService(CvDbContext _context)
         {
-            RuleFor(user => user.FirstName).NotEmpty().WithMessage("Please enter your first name");
-            RuleFor(user => user.LastName).NotEmpty().WithMessage("Please enter your last name");
-            RuleFor(user => user.Email).NotEmpty().WithMessage("Valid email is required");
+            context = _context;
         }
-    }
 
-    public (bool isValid, string message) ValidateEducation(EducationCreateDTO newEducation)
-    {
-        var validationResult = _educationValidator.Validate(newEducation);
-        return !validationResult.IsValid
-            ? (false, "Validation failed: " + string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)))
-            : (true, string.Empty);
-    }
-
-    public class EducationCreateDTOValidator : AbstractValidator<EducationCreateDTO>
-    {
-        public EducationCreateDTOValidator()
+        public async Task<List<UserDtos.UserDto>> GetUsers()
         {
-            RuleFor(education => education.SchoolName).NotEmpty().WithMessage("Please enter school name");
-            RuleFor(education => education.SchoolTitle).NotEmpty().WithMessage("Please enter school title");
-            RuleFor(education => education.IsAlumni).NotEmpty().WithMessage("Please state if you are an Alumni");
-            RuleFor(education => education.GraduationDate).NotEmpty().WithMessage("Please enter graduation date");
-            RuleFor(education => education.StartDate).NotEmpty().WithMessage("Please enter start date");
+            var users = await context.Users.Select(u => new UserDtos.UserDto
+            {
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                EmailAddress = u.EmailAddress,
+
+            }).ToListAsync();
+            return users;
         }
-    }
-
-    public (bool isValid, string message) ValidateWork(WorkCreateDTO newWork)
-    {
-        var validationResult = _workValidator.Validate(newWork);
-        return !validationResult.IsValid
-            ? (false, "Validation failed: " + string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)))
-            : (true, string.Empty);
-    }
-
-    public class WorkCreateDTOValidator : AbstractValidator<WorkCreateDTO>
-    {
-        public WorkCreateDTOValidator()
+        public async Task<List<EducationDtos.EducationDto>> GetEducations()
         {
-            RuleFor(work => work.WorkTitle).NotEmpty().WithMessage("Please enter work title");
-            RuleFor(work => work.Description).NotEmpty().WithMessage("Please enter description");
-            RuleFor(work => work.Duration).NotEmpty().WithMessage("Please enter duration");
-            RuleFor(work => work.CompanyName).NotEmpty().WithMessage("Please enter company name");
+            var educations = await context.Educations.Select(e => new EducationDtos.EducationDto
+            {
+                SchoolName = e.SchoolName,
+                Degree = e.Degree,
+                StartYear = e.StartYear,
+                GraduationYear = e.GraduationYear,
+
+            }).ToListAsync();
+            return educations;
+        }        
+        public async Task<List<WorkDtos.WorkDto>> GetWorks()
+        {
+            var works = await context.Works.Select(w => new WorkDtos.WorkDto
+            {
+             Title = w.Title,
+             Description = w.Description,
+             Company = w.Company,
+             StartYear = w.StartYear,
+             EndYear = w.EndYear,
+
+            }).ToListAsync();
+            return works;
         }
-    }
+        
 }

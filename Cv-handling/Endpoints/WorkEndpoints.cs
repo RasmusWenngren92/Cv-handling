@@ -1,107 +1,173 @@
+using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
-using Cv_handling.DTOs.WorkDTOs;
+using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.Services;
+using Cv_handling.UserServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Endpoints;
 
-public class WorkEndpoints
+public static class WorkEndpoints
 {
-    public static void RegisterEndpoints(WebApplication app)
+    public static RouteGroupBuilder MapWorkEndpoints(this RouteGroupBuilder group)
     {
-        app.MapGet("/work", async (CvDbContext context, int page = 1, int pageSize = 10) =>
+        group.MapGet("/GetWorks", async (UserService userService) =>
         {
             try
             {
-                var workList = await context.Work
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(w => new WorkDTO
-                    {
-                        WorkId = w.WorkId,
-                        CompanyName = w.CompanyName,
-                        Description = w.Description,
-                        Duration = w.Duration,
-                        WorkTitle = w.WorkTitle
-                    }).ToListAsync();
-                return workList.Count == 0 ? Results.NotFound("No work found") : Results.Ok(workList);
-            }
-            catch (Exception)
-            {
-                return Results.StatusCode(500);
-            }
-        });
-
-        app.MapPost("/work", async (WorkCreateDTO newWork, UserService userService, CvDbContext context) =>
-        {
-            try
-            {
-                var (isValid, message) = userService.ValidateWork(newWork);
-
-                if (!isValid)
-                    return Results.BadRequest(new { Message = message });
-
-                var work = new Work
-                {
-                    CompanyName = newWork.CompanyName,
-                    Description = newWork.Description,
-                    Duration = newWork.Duration,
-                    WorkTitle = newWork.WorkTitle
-                };
-                context.Work.Add(work);
-                await context.SaveChangesAsync();
-
-                return Results.Created($"/work/{work.WorkId}", new WorkDTO
-                {
-                    CompanyName = work.CompanyName,
-                    Description = work.Description,
-                    WorkTitle = work.WorkTitle,
-                    Duration = work.Duration
-                });
-            }
-            catch (Exception)
-            {
-                return Results.StatusCode(500);
-            }
-        });
-
-        app.MapPut("/work/{id:int}", async (CvDbContext context, int id, Work work) =>
-        {
-            try
-            {
-                var existingWork = await context.Work.FirstOrDefaultAsync(w => w.WorkId == id);
-                if (existingWork == null) return Results.NotFound($"Work with id {id} not found");
-
-                existingWork.WorkTitle = work.WorkTitle;
-                existingWork.Description = work.Description;
-                existingWork.Duration = work.Duration;
-                existingWork.CompanyName = work.CompanyName;
-
-                context.Work.Update(existingWork);
-                await context.SaveChangesAsync();
-                return Results.NoContent();
-            }
-            catch (Exception)
-            {
-                return Results.StatusCode(500);
-            }
-        });
-
-        app.MapDelete("/work/{id:int}", async (CvDbContext context, int id) =>
-        {
-            try
-            {
-                var existingWork = await context.Work.FirstOrDefaultAsync(w => w.WorkId == id);
-                if (existingWork == null) return Results.NotFound($"Work with id {id} not found");
-                context.Work.Remove(existingWork);
-                await context.SaveChangesAsync();
-                return Results.NoContent();
+                var works = await userService.GetWorks();
+                return Results.Ok(works);
             }
             catch (Exception e)
             {
-                return Results.StatusCode(500);
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/works"
+                );
             }
         });
+
+
+        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
+        {
+            try
+            {
+                var work = await ctx.Works
+                    .Where(w => w.WorkId == id)
+                    .Select(w => new WorkDtos.WorkDto()
+                    {
+                        Title = w.Title,
+                        Company = w.Company,
+                        Description = w.Description,
+                        StartYear = w.StartYear,
+                        EndYear = w.EndYear
+                    }).FirstOrDefaultAsync();
+
+                return work is not null
+                    ? Results.Ok(work) 
+                    : Results.NotFound($"Work with id {id} not found");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/work"
+                );
+            }
+        });
+        group.MapPost("/", async (CvDbContext ctx, WorkDtos.CreateWorkDto newWork) =>
+        {
+            try
+            {
+                var validationContext = new ValidationContext(newWork);
+                var validationResult = new List<ValidationResult>();
+
+                var isValid = Validator.TryValidateObject(newWork, validationContext, validationResult, true);
+
+                if (!isValid)
+                    return Results.BadRequest(validationResult.Select(e => e.ErrorMessage));
+
+                var work = new Work
+                {
+                   Title = newWork.Title,
+                   Company = newWork.Company,
+                   Description = newWork.Description,
+                   StartYear = newWork.StartYear,
+                   EndYear = newWork.EndYear
+                };
+
+                ctx.Works.Add(work);
+                await ctx.SaveChangesAsync();
+                return Results.Created($"/work/{work.WorkId}", work);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/work"
+                );
+            }
+        });
+
+        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, WorkDtos.UpdateWorkDto work) =>
+        {
+            try
+            {
+                var existingWork = await ctx.Works.FirstOrDefaultAsync(u => u.WorkId == id);
+
+
+                if (existingWork == null)
+                    return Results.NotFound(Results.NotFound($"Work with id {id} not found"));
+                if (!string.IsNullOrWhiteSpace(work.Title))
+                    existingWork.Title = work.Title;
+                if (!string.IsNullOrWhiteSpace(work.Company))
+                    existingWork.Company = work.Company;
+
+                if (!string.IsNullOrWhiteSpace(work.Description))
+                    existingWork.Description = work.Description;
+
+                if (work.StartYear > 1960)
+                    existingWork.StartYear = work.StartYear;
+
+                if (work.EndYear.HasValue)
+                    existingWork.EndYear = work.EndYear.Value;
+
+                await ctx.SaveChangesAsync();
+
+                return Results.Ok(existingWork);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/work"
+                );
+            }
+        });
+
+        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
+        {
+            try
+            {
+                var work = await ctx.Works.FirstOrDefaultAsync(u => u.WorkId == id);
+
+                if (work == null)
+                    return Results.NotFound($"Work with id {id} not found");
+
+                ctx.Works.Remove(work);
+                await ctx.SaveChangesAsync();
+
+                return Results.Ok();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"An error occurred: {e}");
+
+                return Results.Problem(
+                    title: "An unexpected error occurred.",
+                    detail: "Something went wrong while fetching data.",
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    instance: "/work"
+                );
+            }
+        });
+
+        return group;
     }
 }
