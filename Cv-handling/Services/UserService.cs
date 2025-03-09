@@ -1,21 +1,12 @@
 using Cv_handling.Data;
 using Cv_handling.DTOs;
-using Cv_handling.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cv_handling.UserServices;
+namespace Cv_handling.Services;
 
-public class UserService
+public abstract class UserService(CvDbContext context)
 {
-    
-        private readonly CvDbContext context;
-
-        public UserService(CvDbContext _context)
-        {
-            context = _context;
-        }
-
-        public async Task<List<UserDto>> GetUsers()
+    public async Task<List<UserDto>> GetUsers()
         {
             var users = await context.Users.Select(u => new UserDto
             {

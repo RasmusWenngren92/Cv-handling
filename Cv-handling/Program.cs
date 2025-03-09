@@ -17,7 +17,7 @@ public class Program
 
         builder.Services.AddDbContext<CvDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+        builder.Services.AddHttpClient();
         var app = builder.Build();
 
 
@@ -37,10 +37,10 @@ public class Program
         app.Use(async (HttpContext ctx, RequestDelegate next) =>
         {
             Console.WriteLine("Request Received.");
-            string? configuerdApiKey = builder.Configuration["ApiKey"];
+            string? configuredApiKey = builder.Configuration["ApiKey"];
             var apiKey = ctx.Request.Headers["X-Api-Key"].FirstOrDefault();
 
-            if (apiKey != configuerdApiKey)
+            if (apiKey != configuredApiKey)
             {
                 ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await ctx.Response.WriteAsync("Invalid API Key.");
@@ -53,6 +53,7 @@ public class Program
         app.MapGroup("/users").MapUserEndpoints();
         app.MapGroup("/educations").MapEducationEndpoints();
         app.MapGroup("/works").MapWorkEndpoints();
+        app.MapGroup("/github").MapGithubEndpoints();
 
         app.Run();
     }

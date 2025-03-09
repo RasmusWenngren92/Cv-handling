@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
 using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.UserServices;
+using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Endpoints;
@@ -45,9 +45,16 @@ public static class EducationEndpoints
                         GraduationYear = e.GraduationYear
                     }).FirstOrDefaultAsync();
 
-                return education is not null
-                    ? Results.Ok(education)
-                    : Results.NotFound($"Education with id {id} not found");
+                var responsDto = new EducationsResponseDto
+                {
+                    SchoolName = education?.SchoolName,
+                    Degree = education?.Degree,
+                    StartYear = education?.StartYear,
+                    GraduationYear = education?.GraduationYear,
+                    
+                };
+
+                return Results.Ok(responsDto);
             }
             catch (Exception e)
             {
@@ -65,33 +72,48 @@ public static class EducationEndpoints
         {
             try
             {
-                var validationContext = new ValidationContext(newEducation);
-                var validationResult = new List<ValidationResult>();
-
-                var isValid = Validator.TryValidateObject(newEducation, validationContext, validationResult, true);
-
-                if (!isValid)
-                    return Results.BadRequest(validationResult.Select(e => e.ErrorMessage));
+                var userExists = await ctx.Users.AnyAsync(u => u.UserId == newEducation.UserIdFk);
+                if (!userExists)
+                    return Results.NotFound($"User with id {newEducation.UserIdFk} not found");
 
                 var education = new Education
                 {
                     SchoolName = newEducation.SchoolName,
                     Degree = newEducation.Degree,
                     StartYear = newEducation.StartYear,
-                    GraduationYear = newEducation.GraduationYear
+                    GraduationYear = newEducation.GraduationYear,
+                    UseridFk = newEducation.UserIdFk
                 };
 
                 ctx.Educations.Add(education);
                 await ctx.SaveChangesAsync();
-                return Results.Created($"/education/{education.EducationId}", education);
+                var responseDto = new EducationsResponseDto
+                {
+                    EducationId = education.EducationId,
+                    UserIdFk = education.UseridFk,
+                    SchoolName = education.SchoolName,
+                    Degree = education.Degree,
+                    StartYear = education.StartYear,
+                    GraduationYear = education.GraduationYear
+                };
+                
+                return Results.Created($"/education/{education.EducationId}", responseDto);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"An error occurred: {e}");
 
+                if (e is DbUpdateException)
+                    return Results.Problem(
+                        title: "Database update error",
+                        detail: "Could not add the education record to the database",
+                        statusCode: StatusCodes.Status500InternalServerError,
+                        instance: "/education"
+                    );
+            
                 return Results.Problem(
-                    title: "An unexpected error occurred.",
-                    detail: "Something went wrong while fetching data.",
+                    title: "An unexpected error occurred",
+                    detail: "Something went wrong while creating data",
                     statusCode: StatusCodes.Status500InternalServerError,
                     instance: "/education"
                 );
@@ -107,8 +129,8 @@ public static class EducationEndpoints
 
                 if (existingEducation == null)
                     return Results.NotFound(Results.NotFound($"Education with id {id} not found"));
-                if (!string.IsNullOrWhiteSpace(education.School))
-                    existingEducation.SchoolName = education.School;
+                if (!string.IsNullOrWhiteSpace(education.SchoolName))
+                    existingEducation.SchoolName = education.SchoolName;
 
                 if (!string.IsNullOrWhiteSpace(education.Degree))
                     existingEducation.Degree = education.Degree;
@@ -118,10 +140,20 @@ public static class EducationEndpoints
 
                 if (education.GraduationYear.HasValue)
                     existingEducation.GraduationYear = education.GraduationYear.Value;
-
+                
                 await ctx.SaveChangesAsync();
+                
+                var responsDto = new EducationsResponseDto
+                {
+                    SchoolName = education.SchoolName,
+                    Degree = education.Degree,
+                    StartYear = education.StartYear,
+                    GraduationYear = education.GraduationYear,
+                };
 
-                return Results.Ok(existingEducation);
+
+
+                return Results.Ok(responsDto);
             }
             catch (Exception e)
             {

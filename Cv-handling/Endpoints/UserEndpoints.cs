@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
 using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.UserServices;
+using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Endpoints;
@@ -83,14 +83,15 @@ public static class UserEndpoints
                 ctx.Users.Add(user);
                 await ctx.SaveChangesAsync();
 
-                var createUser = new CreateUserDto
+                var responsDto = new UserResponseDto
                 {
                     FirstName = newUser.FirstName,
                     LastName = newUser.LastName,
                     EmailAddress = newUser.EmailAddress,
                     PhoneNumber = newUser.PhoneNumber
                 };
-                return Results.Created($"/api/user/{user.UserId}", createUser);
+                
+                return Results.Created($"/api/user/{user.UserId}", responsDto);
             }
             catch (Exception e)
             {
@@ -110,24 +111,29 @@ public static class UserEndpoints
             try
             {
                 var existingUser = await ctx.Users.FirstOrDefaultAsync(u => u.UserId == id);
-
-
-                if (existingUser == null) return Results.NotFound(Results.NotFound($"User with id {id} not found"));
+                if (existingUser == null) 
+                    return Results.NotFound($"User with id {id} not found");
+                
                 existingUser.FirstName = user.FirstName;
                 existingUser.LastName = user.LastName;
                 existingUser.EmailAddress = user.EmailAddress;
                 existingUser.PhoneNumber = user.PhoneNumber;
+                    
+                var validationContext = new ValidationContext(existingUser);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(existingUser, validationContext, validationResults, true))
+                    return Results.BadRequest(validationResults.Select(r => r.ErrorMessage));
 
                 await ctx.SaveChangesAsync();
 
-                var updateUser = new UpdateUserDto
+                var responseDto = new UserDto
                 {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    EmailAddress = user.EmailAddress,
-                    PhoneNumber = user.PhoneNumber
+                    FirstName = existingUser.FirstName,
+                    LastName = existingUser.LastName,
+                    EmailAddress = existingUser.EmailAddress,
+                    PhoneNumber = existingUser.PhoneNumber
                 };
-                return Results.Ok(updateUser);
+                return Results.Ok(responseDto);
             }
             catch (Exception e)
             {

@@ -9,7 +9,5 @@ public class CvDbContext(DbContextOptions<CvDbContext> options) : DbContext(opti
     public DbSet<User> Users { get; set; }
     public DbSet<Work> Works { get; set; }
     public DbSet<Education> Educations { get; set; }
-
-
-
+    
 }

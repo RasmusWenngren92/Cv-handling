@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
 using Cv_handling.DTOs;
 using Cv_handling.Models;
-using Cv_handling.UserServices;
+using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Endpoints;
@@ -67,13 +67,9 @@ public static class WorkEndpoints
         {
             try
             {
-                var validationContext = new ValidationContext(newWork);
-                var validationResult = new List<ValidationResult>();
-
-                var isValid = Validator.TryValidateObject(newWork, validationContext, validationResult, true);
-
-                if (!isValid)
-                    return Results.BadRequest(validationResult.Select(e => e.ErrorMessage));
+                var userExists = await ctx.Users.AnyAsync(u => u.UserId == newWork.UserIdFk);
+                if (!userExists)
+                    return Results.NotFound($"User with id {newWork.UserIdFk} not found");
 
                 var work = new Work
                 {
@@ -81,20 +77,39 @@ public static class WorkEndpoints
                    Company = newWork.Company,
                    Description = newWork.Description,
                    StartYear = newWork.StartYear,
-                   EndYear = newWork.EndYear
+                   EndYear = newWork.EndYear,
+                   UseridFk = newWork.UserIdFk
                 };
 
                 ctx.Works.Add(work);
                 await ctx.SaveChangesAsync();
-                return Results.Created($"/work/{work.WorkId}", work);
+
+                var responsDto = new WorkResponseDto
+                {
+                    WorkId = work.WorkId,
+                    UserIdFk = work.UseridFk,
+                    Company = newWork.Company,
+                    Description = newWork.Description,
+                    StartYear = newWork.StartYear,
+                    EndYear = newWork.EndYear,
+                };
+                return Results.Created($"/work/{work.WorkId}", responsDto);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"An error occurred: {e}");
 
+                if (e is DbUpdateException)
+                    return Results.Problem(
+                        title: "Database update error",
+                        detail: "Could not add the education record to the database",
+                        statusCode: StatusCodes.Status500InternalServerError,
+                        instance: "/work"
+                    );
+            
                 return Results.Problem(
-                    title: "An unexpected error occurred.",
-                    detail: "Something went wrong while fetching data.",
+                    title: "An unexpected error occurred",
+                    detail: "Something went wrong while creating data",
                     statusCode: StatusCodes.Status500InternalServerError,
                     instance: "/work"
                 );
@@ -123,10 +138,20 @@ public static class WorkEndpoints
 
                 if (work.EndYear.HasValue)
                     existingWork.EndYear = work.EndYear.Value;
+                
 
                 await ctx.SaveChangesAsync();
 
-                return Results.Ok(existingWork);
+                var responsDto = new WorkResponseDto
+                {
+                    Company = work.Company,
+                    Title = work.Title,
+                    Description = work.Description,
+                    StartYear = work.StartYear,
+                    EndYear = work.EndYear,
+                };
+
+                return Results.Ok(responsDto);
             }
             catch (Exception e)
             {
