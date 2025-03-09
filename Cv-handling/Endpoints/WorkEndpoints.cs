@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
 using Cv_handling.DTOs;
 using Cv_handling.Models;
@@ -32,13 +31,13 @@ public static class WorkEndpoints
         });
 
 
-        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapGet("/work/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
                 var work = await ctx.Works
                     .Where(w => w.WorkId == id)
-                    .Select(w => new WorkDto()
+                    .Select(w => new WorkDto
                     {
                         Title = w.Title,
                         Company = w.Company,
@@ -48,7 +47,7 @@ public static class WorkEndpoints
                     }).FirstOrDefaultAsync();
 
                 return work is not null
-                    ? Results.Ok(work) 
+                    ? Results.Ok(work)
                     : Results.NotFound($"Work with id {id} not found");
             }
             catch (Exception e)
@@ -63,7 +62,7 @@ public static class WorkEndpoints
                 );
             }
         });
-        group.MapPost("/", async (CvDbContext ctx, CreateWorkDto newWork) =>
+        group.MapPost("/work", async (CvDbContext ctx, CreateWorkDto newWork) =>
         {
             try
             {
@@ -73,12 +72,12 @@ public static class WorkEndpoints
 
                 var work = new Work
                 {
-                   Title = newWork.Title,
-                   Company = newWork.Company,
-                   Description = newWork.Description,
-                   StartYear = newWork.StartYear,
-                   EndYear = newWork.EndYear,
-                   UseridFk = newWork.UserIdFk
+                    Title = newWork.Title,
+                    Company = newWork.Company,
+                    Description = newWork.Description,
+                    StartYear = newWork.StartYear,
+                    EndYear = newWork.EndYear,
+                    UserIdFk = newWork.UserIdFk
                 };
 
                 ctx.Works.Add(work);
@@ -87,11 +86,11 @@ public static class WorkEndpoints
                 var responsDto = new WorkResponseDto
                 {
                     WorkId = work.WorkId,
-                    UserIdFk = work.UseridFk,
+                    UserIdFk = work.UserIdFk,
                     Company = newWork.Company,
                     Description = newWork.Description,
                     StartYear = newWork.StartYear,
-                    EndYear = newWork.EndYear,
+                    EndYear = newWork.EndYear
                 };
                 return Results.Created($"/work/{work.WorkId}", responsDto);
             }
@@ -106,7 +105,7 @@ public static class WorkEndpoints
                         statusCode: StatusCodes.Status500InternalServerError,
                         instance: "/work"
                     );
-            
+
                 return Results.Problem(
                     title: "An unexpected error occurred",
                     detail: "Something went wrong while creating data",
@@ -116,7 +115,7 @@ public static class WorkEndpoints
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateWorkDto work) =>
+        group.MapPut("/work/{id:int}", async (CvDbContext ctx, int id, UpdateWorkDto work) =>
         {
             try
             {
@@ -138,7 +137,7 @@ public static class WorkEndpoints
 
                 if (work.EndYear.HasValue)
                     existingWork.EndYear = work.EndYear.Value;
-                
+
 
                 await ctx.SaveChangesAsync();
 
@@ -148,7 +147,7 @@ public static class WorkEndpoints
                     Title = work.Title,
                     Description = work.Description,
                     StartYear = work.StartYear,
-                    EndYear = work.EndYear,
+                    EndYear = work.EndYear
                 };
 
                 return Results.Ok(responsDto);
@@ -166,7 +165,7 @@ public static class WorkEndpoints
             }
         });
 
-        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapDelete("/work/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {

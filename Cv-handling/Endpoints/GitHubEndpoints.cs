@@ -1,42 +1,50 @@
+using System.Text.Json;
 using Cv_handling.DTOs;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Cv_handling.Endpoints;
 
 public static class GitHubEndpoints
 {
     
-    public static RouteGroupBuilder MapGithubEndpoints(this RouteGroupBuilder group)
+    public static  WebApplication MapGitHubEndpoints(WebApplication app)
     {
-        group.MapGet("/{username}", async (HttpClient client, string username) =>
-        {  
-            var url = $"https://api.github.com/{username}/repos";
+        app.MapGet("/api/github/{username}", async ([FromServices]HttpClient client, string username) =>
+        {
+           
+            client.DefaultRequestHeaders.Add("User-Agent", "request");
             
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+            var response = await client.GetAsync($"https://api.github.com/users/{username}/repos");
             
-            var response = await client.GetAsync(url);
+            
             if (!response.IsSuccessStatusCode)
             {
-                return Results.BadRequest($"Could not ger repositories for user {username}");
+                return Results.BadRequest($"Could not get repositories for user {username}");
             }
-
-            var repositories = await response.Content.ReadFromJsonAsync<List<GithubDtos.GitHubRepo>>();
-
+            
+            var json = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            
+            var repositories = JsonSerializer.Deserialize<List<GithubDto>>(json, options);
+            
             if (repositories == null || repositories.Count == 0)
             {
-                return Results.NotFound($"No public repositories found for user {username}.");
+                return Results.Ok("No repositories found.");
             }
 
-            var result = repositories.Select(repo => new
+
+            var repoList = repositories.Select(repo => new
             {
-                Name = repo.Name,
-                Language = string.IsNullOrEmpty(repo.Language) ? "Unknown" : repo.Language,
-                Description = string.IsNullOrEmpty(repo.Description) ? "Missing" : repo.Description,
-                url = repo.HtmlUrl
+                repo.Name,
+                Language = string.IsNullOrEmpty(repo.Language) ? "unknown" : repo.Language,
+                Description = string.IsNullOrEmpty(repo.Description) ? "missing" : repo.Description,
+                Url = repo.HtmlUrl
             });
-            return Results.Ok(result);
+            
+            return Results.Ok(repoList);
         });
 
-        return group;
+        return app;
     }
     
 }

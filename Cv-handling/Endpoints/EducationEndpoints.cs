@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Cv_handling.Data;
 using Cv_handling.DTOs;
 using Cv_handling.Models;
@@ -31,7 +30,7 @@ public static class EducationEndpoints
             }
         });
 
-        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapGet("/education/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
@@ -50,8 +49,7 @@ public static class EducationEndpoints
                     SchoolName = education?.SchoolName,
                     Degree = education?.Degree,
                     StartYear = education?.StartYear,
-                    GraduationYear = education?.GraduationYear,
-                    
+                    GraduationYear = education?.GraduationYear
                 };
 
                 return Results.Ok(responsDto);
@@ -68,7 +66,7 @@ public static class EducationEndpoints
                 );
             }
         });
-        group.MapPost("/", async (CvDbContext ctx, CreateEducationDto newEducation) =>
+        group.MapPost("/education", async (CvDbContext ctx, CreateEducationDto newEducation) =>
         {
             try
             {
@@ -96,7 +94,7 @@ public static class EducationEndpoints
                     StartYear = education.StartYear,
                     GraduationYear = education.GraduationYear
                 };
-                
+
                 return Results.Created($"/education/{education.EducationId}", responseDto);
             }
             catch (Exception e)
@@ -110,7 +108,7 @@ public static class EducationEndpoints
                         statusCode: StatusCodes.Status500InternalServerError,
                         instance: "/education"
                     );
-            
+
                 return Results.Problem(
                     title: "An unexpected error occurred",
                     detail: "Something went wrong while creating data",
@@ -120,7 +118,7 @@ public static class EducationEndpoints
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateEducationDto education) =>
+        group.MapPut("/education/{id:int}", async (CvDbContext ctx, int id, UpdateEducationDto education) =>
         {
             try
             {
@@ -140,17 +138,16 @@ public static class EducationEndpoints
 
                 if (education.GraduationYear.HasValue)
                     existingEducation.GraduationYear = education.GraduationYear.Value;
-                
+
                 await ctx.SaveChangesAsync();
-                
+
                 var responsDto = new EducationsResponseDto
                 {
                     SchoolName = education.SchoolName,
                     Degree = education.Degree,
                     StartYear = education.StartYear,
-                    GraduationYear = education.GraduationYear,
+                    GraduationYear = education.GraduationYear
                 };
-
 
 
                 return Results.Ok(responsDto);
@@ -168,7 +165,7 @@ public static class EducationEndpoints
             }
         });
 
-        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapDelete("/education/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {

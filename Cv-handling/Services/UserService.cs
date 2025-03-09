@@ -4,43 +4,42 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling.Services;
 
-public abstract class UserService(CvDbContext context)
+public class UserService(CvDbContext context)
 {
     public async Task<List<UserDto>> GetUsers()
+    {
+        var users = await context.Users.Select(u => new UserDto
         {
-            var users = await context.Users.Select(u => new UserDto
-            {
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                EmailAddress = u.EmailAddress,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            EmailAddress = u.EmailAddress,
+            PhoneNumber = u.PhoneNumber
+        }).ToListAsync();
+        return users;
+    }
 
-            }).ToListAsync();
-            return users;
-        }
-        public async Task<List<EducationDto>> GetEducations()
+    public async Task<List<EducationDto>> GetEducations()
+    {
+        var educations = await context.Educations.Select(e => new EducationDto
         {
-            var educations = await context.Educations.Select(e => new EducationDto
-            {
-                SchoolName = e.SchoolName,
-                Degree = e.Degree,
-                StartYear = e.StartYear,
-                GraduationYear = e.GraduationYear,
+            SchoolName = e.SchoolName,
+            Degree = e.Degree,
+            StartYear = e.StartYear,
+            GraduationYear = e.GraduationYear
+        }).ToListAsync();
+        return educations;
+    }
 
-            }).ToListAsync();
-            return educations;
-        }        
-        public async Task<List<WorkDto>> GetWorks()
+    public async Task<List<WorkDto>> GetWorks()
+    {
+        var works = await context.Works.Select(w => new WorkDto
         {
-            var works = await context.Works.Select(w => new WorkDto
-            {
-             Title = w.Title,
-             Description = w.Description,
-             Company = w.Company,
-             StartYear = w.StartYear,
-             EndYear = w.EndYear,
-
-            }).ToListAsync();
-            return works;
-        }
-        
+            Title = w.Title,
+            Description = w.Description,
+            Company = w.Company,
+            StartYear = w.StartYear,
+            EndYear = w.EndYear
+        }).ToListAsync();
+        return works;
+    }
 }

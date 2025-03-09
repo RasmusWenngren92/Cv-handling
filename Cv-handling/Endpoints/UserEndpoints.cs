@@ -11,7 +11,7 @@ public static class UserEndpoints
 {
     public static RouteGroupBuilder MapUserEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("GetUsers", async (UserService userServices) =>
+        group.MapGet("/GetUsers", async (UserService userServices) =>
         {
             try
             {
@@ -31,7 +31,7 @@ public static class UserEndpoints
             }
         });
 
-        group.MapGet("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapGet("/user/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {
@@ -60,7 +60,7 @@ public static class UserEndpoints
             }
         });
 
-        group.MapPost("/", async (CvDbContext ctx, CreateUserDto newUser) =>
+        group.MapPost("/user", async (CvDbContext ctx, CreateUserDto newUser) =>
         {
             try
             {
@@ -90,7 +90,7 @@ public static class UserEndpoints
                     EmailAddress = newUser.EmailAddress,
                     PhoneNumber = newUser.PhoneNumber
                 };
-                
+
                 return Results.Created($"/api/user/{user.UserId}", responsDto);
             }
             catch (Exception e)
@@ -106,19 +106,19 @@ public static class UserEndpoints
             }
         });
 
-        group.MapPut("/{id:int}", async (CvDbContext ctx, int id, UpdateUserDto user) =>
+        group.MapPut("/user/{id:int}", async (CvDbContext ctx, int id, UpdateUserDto user) =>
         {
             try
             {
                 var existingUser = await ctx.Users.FirstOrDefaultAsync(u => u.UserId == id);
-                if (existingUser == null) 
+                if (existingUser == null)
                     return Results.NotFound($"User with id {id} not found");
-                
+
                 existingUser.FirstName = user.FirstName;
                 existingUser.LastName = user.LastName;
                 existingUser.EmailAddress = user.EmailAddress;
                 existingUser.PhoneNumber = user.PhoneNumber;
-                    
+
                 var validationContext = new ValidationContext(existingUser);
                 var validationResults = new List<ValidationResult>();
                 if (!Validator.TryValidateObject(existingUser, validationContext, validationResults, true))
@@ -148,15 +148,15 @@ public static class UserEndpoints
             }
         });
 
-        group.MapGet("/{id:int}/detail", async (CvDbContext ctx, int id) =>
+        group.MapGet("/user/{id:int}/detail", async (CvDbContext ctx, int id) =>
         {
             var user = await ctx.Users
                 .Where(u => u.UserId == id)
                 .Include(u => u.Educations)
                 .Include(u => u.Works)
                 .FirstOrDefaultAsync();
-            
-            if(user is null)
+
+            if (user is null)
                 return Results.NotFound($"User with id {id} not found");
 
             var userDetails = new UserDetailResponseDto
@@ -170,7 +170,7 @@ public static class UserEndpoints
                     SchoolName = e.SchoolName,
                     Degree = e.Degree,
                     StartYear = e.StartYear,
-                    GraduationYear = e.GraduationYear,
+                    GraduationYear = e.GraduationYear
                 }).ToList(),
                 Works = user.Works.Select(e => new WorkResponseDto
                 {
@@ -179,12 +179,12 @@ public static class UserEndpoints
                     Description = e.Description,
                     StartYear = e.StartYear,
                     EndYear = e.EndYear
-                }).ToList(),
+                }).ToList()
             };
             return Results.Ok(userDetails);
         });
 
-        group.MapDelete("/{id:int}", async (CvDbContext ctx, int id) =>
+        group.MapDelete("/user/{id:int}", async (CvDbContext ctx, int id) =>
         {
             try
             {

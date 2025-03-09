@@ -61,8 +61,10 @@ public class UpdateWorkDto
     [Required] public string Title { get; set; }
     [Required] public string Company { get; set; }
     public string? Description { get; set; }
+
     [Range(1960, 2030, ErrorMessage = "Provide a valid year between 1960 and 2030")]
     public int StartYear { get; set; }
+
     [Range(1960, 2030, ErrorMessage = "Provide a valid year between 1960 and 2030")]
     public int? EndYear { get; set; }
 }

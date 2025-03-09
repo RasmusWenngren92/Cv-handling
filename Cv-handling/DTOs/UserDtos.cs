@@ -26,7 +26,6 @@ public class UserDto
 
 public class CreateUserDto
 {
-
     [Required]
     [StringLength(30, MinimumLength = 2,
         ErrorMessage = "A first name is required and must be between 2 and 30 characters")]

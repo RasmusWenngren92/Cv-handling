@@ -1,6 +1,6 @@
 using Cv_handling.Data;
 using Cv_handling.Endpoints;
-using FluentValidation;
+using Cv_handling.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cv_handling;
@@ -10,13 +10,13 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
-
+        builder.Services.AddDbContext<CvDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Services.AddScoped<UserService>();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        builder.Services.AddDbContext<CvDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
         builder.Services.AddHttpClient();
         var app = builder.Build();
 
@@ -31,32 +31,17 @@ public class Program
                 options.RoutePrefix = string.Empty;
             });
         }
-        
+
         app.UseHttpsRedirection();
 
-        app.Use(async (HttpContext ctx, RequestDelegate next) =>
-        {
-            Console.WriteLine("Request Received.");
-            string? configuredApiKey = builder.Configuration["ApiKey"];
-            var apiKey = ctx.Request.Headers["X-Api-Key"].FirstOrDefault();
-
-            if (apiKey != configuredApiKey)
-            {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await ctx.Response.WriteAsync("Invalid API Key.");
-                return;
-            }
-
-            await next(ctx);
-        });
 
         app.MapGroup("/users").MapUserEndpoints();
         app.MapGroup("/educations").MapEducationEndpoints();
         app.MapGroup("/works").MapWorkEndpoints();
-        app.MapGroup("/github").MapGithubEndpoints();
+
+
+        GitHubEndpoints.MapGitHubEndpoints(app);
 
         app.Run();
     }
 }
-
-
