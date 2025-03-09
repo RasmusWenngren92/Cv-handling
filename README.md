@@ -1,5 +1,6 @@
 # REST-API för CV-hantering
 
+![ER-Diagram](https://github.com/user-attachments/assets/c4f2876d-14d7-4e16-98db-6e3f92f4d84b)
 
 ---
 # Vad du ska göra
