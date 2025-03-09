@@ -1,7 +1,9 @@
-# REST-API för CV-hantering
+# REST-API fï¿½r CV-hantering
+
+![ER-Diagram](c:\Users\rasmu\source\repos\Cv-handling\ER-Diagram.png)
 
 ---
-# Vad du ska göra
+# Vad du ska gï¿½ra
 
 **Databasen**
 
@@ -12,46 +14,46 @@ Du ska designa och skapa en databas som lagrar information om en persons utbildn
 - [x]  **Utbildningar**
     - Skola, examen, start- och slutdatum.
 - [x]  **Arbetserfarenhet**
-    - Jobbtitel, företag, beskrivning och år.
+    - Jobbtitel, fï¿½retag, beskrivning och ï¿½r.
 
-- [x]  Designa ett **ER-diagram** som visar hur tabellerna är relaterade.
+- [x]  Designa ett **ER-diagram** som visar hur tabellerna ï¿½r relaterade.
 - [x]  Skapa databasen med **Entity Framework Core** genom **Code-First**.
-- [ ]  Lägg upp en bild av ditt **ER-diagram** i **README-filen** i ditt Git-repo.
+- [x]  Lï¿½gg upp en bild av ditt **ER-diagram** i **README-filen** i ditt Git-repo.
 
 ---
 
 **Skapa ett REST-API**
 
-Ditt API ska göra det möjligt att hantera information om en persons utbildningar och arbetslivserfarenhet.
+Ditt API ska gï¿½ra det mï¿½jligt att hantera information om en persons utbildningar och arbetslivserfarenhet.
 
-Anropen till databasen ska lösas genom Entity Framework.
+Anropen till databasen ska lï¿½sas genom Entity Framework.
 
-- [x]  **Hämta all data** (alla personer, utbildningar och jobberfarenheter).
-- [x]  **Hämta en specifik post** baserat på dess ID.
-- [x]  **Lägga till ny utbildning eller jobberfarenhet**.
-- [x]  **Uppdatera befintlig information** (t.ex. ändra jobbtitel eller examensår).
+- [x]  **Hï¿½mta all data** (alla personer, utbildningar och jobberfarenheter).
+- [x]  **Hï¿½mta en specifik post** baserat pï¿½ dess ID.
+- [x]  **Lï¿½gga till ny utbildning eller jobberfarenhet**.
+- [x]  **Uppdatera befintlig information** (t.ex. ï¿½ndra jobbtitel eller examensï¿½r).
 - [x]  **Ta bort en utbildning eller jobberfarenhet**.
 
 ---
 
 **Integrera ett externt API**
 
-För att inkludera anrop till externa API:er ska du:
+Fï¿½r att inkludera anrop till externa API:er ska du:
 
-- [x]  Implementera en endpoint där en användare kan **ange sitt GitHub-användarnamn**.
-- [x]  När användarnamnet anges ska API:et hämta **en lista över personens publika GitHub-repositories** via GitHub API.
-- [x]  Returnera **minst** följande information:
+- [x]  Implementera en endpoint dï¿½r en anvï¿½ndare kan **ange sitt GitHub-anvï¿½ndarnamn**.
+- [x]  Nï¿½r anvï¿½ndarnamnet anges ska API:et hï¿½mta **en lista ï¿½ver personens publika GitHub-repositories** via GitHub API.
+- [x]  Returnera **minst** fï¿½ljande information:
     - Repository-namn.
-    - Språk som används i repot (om inget språk anges, returnera “okänt” som värde).
-    - Beskrivning av repot (om finns, annars “saknas” som värde).
-    - Länk till repot.
+    - Sprï¿½k som anvï¿½nds i repot (om inget sprï¿½k anges, returnera ï¿½okï¿½ntï¿½ som vï¿½rde).
+    - Beskrivning av repot (om finns, annars ï¿½saknasï¿½ som vï¿½rde).
+    - Lï¿½nk till repot.
 
 ---
 
-**Säkerhet & validering**
+**Sï¿½kerhet & validering**
 
-För att säkerställa att API:et är robust och säkert ska du:
+Fï¿½r att sï¿½kerstï¿½lla att API:et ï¿½r robust och sï¿½kert ska du:
 
-- [ ]  Implementera **validering** för att förhindra att ogiltiga eller tomma fält skickas in.
-- [ ]  Säkerställ att API:et returnerar **relevanta status koder** vid olika typer av anrop.
-- [ ]  Förhindra att användare kan ändra eller ta bort data som de inte själva har skapat.
+- [x]  Implementera **validering** fï¿½r att fï¿½rhindra att ogiltiga eller tomma fï¿½lt skickas in.
+- [x]  Sï¿½kerstï¿½ll att API:et returnerar **relevanta status koder** vid olika typer av anrop.
+
